@@ -27,8 +27,13 @@ type (
 )
 
 func main() {
-	loadConf()
-	r := regexp.MustCompile(`ogawa`)
+	c := loadConf()
+
+	r := map[string]*regexp.Regexp{}
+	for k, v := range c.Rules {
+		r[k] = regexp.MustCompile(v.From)
+	}
+
 	f, err := os.OpenFile("/tmp/ogawa.log", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
 	if err != nil {
 		log.Fatal(err)
@@ -38,15 +43,20 @@ func main() {
 	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {
 		t := scanner.Text()
+		// To console
 		println(t)
-		fmt.Fprintln(f, r.ReplaceAllString(t, ""))
+		// To file
+		for k, v := range r {
+			t = fmt.Sprint(v.ReplaceAllString(t, c.Rules[k].To))
+		}
+		fmt.Fprintln(f, t)
 	}
 	if err := scanner.Err(); err != nil {
 		log.Fatal(err)
 	}
 }
 
-func loadConf() {
+func loadConf() *config {
 	c := fmt.Sprintf("%s/%s", getAppDir(), CONF_FILE)
 	var conf config
 	if exists(c) {
@@ -54,7 +64,8 @@ func loadConf() {
 			log.Fatal(err)
 		}
 	}
-	fmt.Printf("%s: %#v\n", c, conf.Rules)
+
+	return &conf
 }
 
 func getAppDir() string {
