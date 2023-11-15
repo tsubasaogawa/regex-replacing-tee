@@ -1,3 +1,4 @@
+// main
 package main
 
 import (
@@ -18,12 +19,14 @@ const (
 )
 
 type (
+	// Configurations
 	config struct {
 		Rules map[string]rule
 	}
+	// Regexp rules
 	rule struct {
-		From string
-		To   string
+		From string // Regexp rule
+		To   string // Replace to
 	}
 )
 
@@ -54,27 +57,31 @@ func main() {
 	}
 
 	out := flag.Args()[0]
-
-	c := loadConf(confFile)
-
-	r := map[string]*regexp.Regexp{}
-	for k, v := range c.Rules {
-		r[k] = regexp.MustCompile(v.From)
-	}
-
 	f, err := os.OpenFile(out, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer f.Close()
 
+	capture(f, loadConf(confFile))
+}
+
+// Capturing stdin with replacing text
+func capture(f *os.File, c *config) {
+	regexs := map[string]*regexp.Regexp{}
+
+	for k, v := range c.Rules {
+		regexs[k] = regexp.MustCompile(v.From)
+	}
+
 	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {
 		t := scanner.Text()
+
 		// To console
 		println(t)
-		// To file
-		for k, v := range r {
+		// To file: replace for the number of regexs
+		for k, v := range regexs {
 			t = fmt.Sprint(v.ReplaceAllString(t, c.Rules[k].To))
 		}
 		fmt.Fprintln(f, t)
@@ -84,8 +91,10 @@ func main() {
 	}
 }
 
+// Load configuration toml file
 func loadConf(confFile string) *config {
-	var conf config
+	conf := config{}
+
 	if exists(confFile) {
 		if _, err := toml.DecodeFile(confFile, &conf); err != nil {
 			log.Fatal(err)
@@ -95,6 +104,7 @@ func loadConf(confFile string) *config {
 	return &conf
 }
 
+// Returns application abs path. If the app was run by `go run`, it returns cwd
 func getAppDir() string {
 	d, err := os.Executable()
 	if err != nil {
