@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -26,15 +27,42 @@ type (
 	}
 )
 
+var (
+	version  string = "v0.0.0"
+	confFile string
+	v        bool
+)
+
+func init() {
+	c := fmt.Sprintf("%s/%s", getAppDir(), CONF_FILE)
+
+	flag.BoolVar(&v, "v", false, "version")
+	flag.StringVar(&confFile, "c", c, "config file path")
+}
+
 func main() {
-	c := loadConf()
+	flag.Parse()
+
+	if v {
+		fmt.Println(version)
+		os.Exit(0)
+	}
+
+	if flag.NArg() != 1 {
+		flag.PrintDefaults()
+		os.Exit(0)
+	}
+
+	out := flag.Args()[0]
+
+	c := loadConf(confFile)
 
 	r := map[string]*regexp.Regexp{}
 	for k, v := range c.Rules {
 		r[k] = regexp.MustCompile(v.From)
 	}
 
-	f, err := os.OpenFile("/tmp/ogawa.log", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
+	f, err := os.OpenFile(out, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -56,11 +84,10 @@ func main() {
 	}
 }
 
-func loadConf() *config {
-	c := fmt.Sprintf("%s/%s", getAppDir(), CONF_FILE)
+func loadConf(confFile string) *config {
 	var conf config
-	if exists(c) {
-		if _, err := toml.DecodeFile(c, &conf); err != nil {
+	if exists(confFile) {
+		if _, err := toml.DecodeFile(confFile, &conf); err != nil {
 			log.Fatal(err)
 		}
 	}
