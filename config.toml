@@ -1,9 +1,9 @@
 [rules.esc_color_basic]
-from = '[ESC|\\e]\[\d{1,2}m'
+from = '\x1b\[\d{1,2}m'
 to = ''
 
 [rules.esc_color_enhanced]
-from = '[ESC|\\e]\[\d{2};\d;[nrgb;]+m'
+from = '\x1b\[\d{2};\d;[nrgb;]+m'
 to = ''
 
 [_config]
