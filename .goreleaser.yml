@@ -22,7 +22,11 @@ builds:
       - windows
 
 archives:
-  - name_template: >-
+  - files:
+      - config.toml
+      - LICENSE
+      - README.md
+    name_template: >-
       {{- .ProjectName }}_
       {{- title .Os }}_
       {{- if eq .Arch "amd64" }}x86_64
