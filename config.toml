@@ -1,13 +1,11 @@
-[rules.esc_color_basic]
+[[rules]]
 from = '\x1b\[\d{1,2}m'
 to = ''
 
-[rules.esc_color_enhanced]
+[[rules]]
 from = '\x1b\[\d{2};\d;[nrgb;]+m'
 to = ''
 
-[rules.esc_color_with_weight]
+[[rules]]
 from = '\x1b\[\d{1,2};(?:\d{1,2};?){1,2}m'
 to = ''
-
-[_config]
